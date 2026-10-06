@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#38a8ee">
+<title>Pune Heritage Guide</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="lib/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Welcome -->
+<div id="welcome">
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  <div class="w-card">
+    <div class="w-emoji">🏯</div>
+    <h1>नमस्कार<span id="w-name"></span>!</h1>
+    <p class="w-sub">Your own guide to old Pune<br>तुमची खास जुन्या पुण्याची सफर</p>
+    <input id="w-input" type="text" placeholder="Your name / तुमचे नाव" maxlength="24" autocomplete="off">
+    <div class="w-lang">
+      <button data-l="mr" class="on">मराठी</button>
+      <button data-l="en">English</button>
+    </div>
+    <button id="w-go" class="big">Begin the journey ✨</button>
+  </div>
+</div>
+
+<header>
+  <div class="brand"><span>🏯</span><div><b id="h-title">पुणे वारसा</b><small id="h-sub">Pune Heritage Guide</small></div></div>
+  <div class="lang">
+    <button id="lang-mr" class="on">मराठी</button>
+    <button id="lang-en">EN</button>
+  </div>
+</header>
+
+<div id="banner" class="hidden"></div>
+
+<main>
+  <section id="tab-map" class="tab on">
+    <div id="map"></div>
+
+    <div id="bar">
+      <button id="locate" class="pill">📍 Start walking tour</button>
+      <button id="pick" class="pill">📌 Pick location</button>
+      <span id="status" class="pill soft hidden"></span>
+    </div>
+    <button id="recenter" class="fab hidden" title="Centre on me">🎯</button>
+
+    <div id="cards"></div>
+
+    <div id="panel" class="hidden">
+      <div class="grab"></div>
+      <div class="p-head">
+        <h2 id="p-name"></h2>
+        <button id="p-close" class="x">✕</button>
+      </div>
+      <div id="wave" class="wave"><i></i><i></i><i></i><i></i><i></i></div>
+      <p id="p-story"></p>
+      <div class="row">
+        <button id="p-play" class="big">▶ Listen</button>
+        <button id="p-stop">■</button>
+        <button id="p-memory">📷 Memory</button>
+      </div>
+      <div class="row">
+        <button id="p-here" class="ghost">✅ I'm here</button>
+        <button id="p-next" class="ghost"></button>
+        <button id="p-walk" class="ghost">🚶 Directions</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-journey" class="tab">
+    <div class="hero">
+      <h2 id="j-title">Your Heritage Passport</h2>
+      <div class="meter"><div id="j-bar"></div></div>
+      <p id="j-count"></p>
+    </div>
+    <div id="stamps"></div>
+  </section>
+
+  <section id="tab-diary" class="tab">
+    <h2 id="d-title">Memory Diary</h2>
+    <form id="diary-form">
+      <select id="d-spot"></select>
+      <label class="photo">📷 Take / choose photo
+        <input type="file" id="d-photo" accept="image/*">
+      </label>
+      <img id="d-preview" class="hidden" alt="">
+      <textarea id="d-note" rows="3" placeholder="आजची आठवण... / Write a memory..."></textarea>
+      <button type="submit" class="big">Save memory 💙</button>
+    </form>
+    <div id="entries"></div>
+  </section>
+
+  <section id="tab-voice" class="tab">
+    <h2>Voice</h2>
+    <div class="card">
+      <label>Voice <select id="v-voice"></select></label>
+      <label>Speed <input type="range" id="v-rate" min="0.5" max="1.5" step="0.05" value="0.9"></label>
+      <label>Pitch <input type="range" id="v-pitch" min="0.5" max="1.5" step="0.05" value="1"></label>
+      <label class="chk"><input type="checkbox" id="v-auto" checked> Auto-speak when I reach a spot</label>
+      <button id="v-test" class="big">🔊 Test voice</button>
+      <p class="hint" id="v-hint"></p>
+    </div>
+    <button id="reset" class="ghost" style="margin-top:14px">Reset visited spots</button>
+  </section>
+</main>
+
+<nav>
+  <button data-tab="map" class="on"><span>🗺️</span>Map</button>
+  <button data-tab="journey"><span>🏅</span>Passport</button>
+  <button data-tab="diary"><span>📖</span>Diary</button>
+  <button data-tab="voice"><span>🎙️</span>Voice</button>
+</nav>
+
+<div id="toast" class="hidden"></div>
+<div id="confetti"></div>
+
+<script src="lib/leaflet.js"></script>
+<script src="spots.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

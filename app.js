@@ -1,6 +1,6 @@
 const $ = s => document.querySelector(s);
 const RADIUS = 70; // metres: how close she must be to trigger a spot
-const EMOJI = { kasba: "🐘", lalmahal: "🏰", shaniwarwada: "🏯", dagdusheth: "🪔", tulshibaug: "🛍️", vishrambaug: "🏛️", kelkar: "🖼️", parvati: "⛰️", pataleshwar: "🕉️", agakhan: "🕊️" };
+const EMOJI = { bhidewada: "📚", mandai: "🥭", sarasbaug: "🌳", fergusson: "🎓", chaturshringi: "🛕", sppu: "🏫", osho: "🎋", shinde: "🪦", kasba: "🐘", lalmahal: "🏰", shaniwarwada: "🏯", dagdusheth: "🪔", tulshibaug: "🛍️", vishrambaug: "🏛️", kelkar: "🖼️", parvati: "⛰️", pataleshwar: "🕉️", agakhan: "🕊️" };
 const T = {
   mr: { title: "पुणे वारसा", listen: "▶ ऐका", next: "पुढचा थांबा: ", here: "✅ मी इथे आहे", dir: "🚶 मार्ग", mem: "📷 आठवण", start: "📍 चालायला सुरुवात", stop: "⏹ थांबवा",
         passport: "तुमचा वारसा पासपोर्ट", visited: n => `${n} / ${SPOTS.length} ठिकाणे पाहिली`, diary: "आठवणींची डायरी", save: "आठवण जपा 💙", finding: "तुम्हाला शोधतोय…",
@@ -13,10 +13,16 @@ let lang = localStorage.lang || "mr";
 let userName = localStorage.userName || "";
 let visited = new Set(JSON.parse(localStorage.visited || "[]"));
 let current = null, me = null, watchId = null, routeLine = null;
+let tripId = localStorage.trip || "both";
+if (!TRIPS.some(t => t.id === tripId)) tripId = "both";
+const trip = () => TRIPS.find(t => t.id === tripId);
+const tripSpots = () => trip().ids.map(id => SPOTS.find(s => s.id === id));
+const nextOf = id => { const ids = trip().ids, i = ids.indexOf(id); return i >= 0 && i < ids.length - 1 ? SPOTS.find(s => s.id === ids[i + 1]) : null; };
+let tripLine = null;
 const announced = new Set();
 const markers = {};
 const spot = id => SPOTS.find(s => s.id === id);
-const idx = id => SPOTS.findIndex(s => s.id === id) + 1;
+const idx = id => { const i = trip().ids.indexOf(id); return (i < 0 ? SPOTS.findIndex(s => s.id === id) : i) + 1; };
 
 // ---------- Welcome ----------
 $("#w-input").value = userName;
@@ -51,6 +57,34 @@ SPOTS.forEach(s => {
   markers[s.id] = L.marker([s.lat, s.lng], { icon: pinIcon(s) }).addTo(map).on("click", () => openSpot(s.id, false));
 });
 function refreshPins() { SPOTS.forEach(s => markers[s.id].setIcon(pinIcon(s, current && current.id === s.id))); }
+function applyTrip(fit) {
+  const ids = trip().ids;
+  SPOTS.forEach(s => ids.includes(s.id) ? markers[s.id].addTo(map) : markers[s.id].remove());
+  if (tripLine) tripLine.remove();
+  const pts = tripSpots().map(s => [s.lat, s.lng]);
+  tripLine = L.polyline(pts, { color: "#38a8ee", weight: 4, opacity: .7, dashArray: "2 9", lineCap: "round" }).addTo(map);
+  if (current && !ids.includes(current.id)) closePanel();
+  refreshPins(); renderCards();
+  $("#tripchip").textContent = trip().emoji + " " + trip().name[lang];
+  if (fit) map.fitBounds(tripLine.getBounds(), { padding: [40, 40] });
+}
+function renderTrips() {
+  $("#t-title").textContent = lang === "mr" ? "तुमची सफर निवडा" : "Choose your trip";
+  $("#trips").innerHTML = TRIPS.map(t => {
+    const done = t.ids.filter(id => visited.has(id)).length;
+    return `<div class="trip ${t.id === tripId ? "on" : ""}">
+      <div class="t-e">${t.emoji}</div><h3>${t.name[lang]}</h3><p>${t.desc[lang]}</p>
+      <div class="chips"><span>${t.ids.length} ${lang === "mr" ? "ठिकाणे" : "stops"}</span><span>✓ ${done}/${t.ids.length}</span></div>
+      <button class="big" data-t="${t.id}">${t.id === tripId ? (lang === "mr" ? "नकाशावर पहा 🗺️" : "Show on map 🗺️") : (lang === "mr" ? "ही सफर सुरू करा" : "Start this trip")}</button></div>`;
+  }).join("");
+  document.querySelectorAll("#trips button").forEach(b => b.onclick = () => selectTrip(b.dataset.t));
+}
+function selectTrip(id) {
+  tripId = id; localStorage.trip = id; announced.clear();
+  closePanel(); applyTrip(true); renderTrips(); showTab("map");
+  toast(trip().emoji + " " + trip().name[lang]);
+}
+$("#tripchip").onclick = () => showTab("trips");
 
 function dist(a, b) { // haversine, metres
   const R = 6371000, r = x => x * Math.PI / 180;
@@ -61,7 +95,7 @@ function dist(a, b) { // haversine, metres
 
 // ---------- Cards ----------
 function renderCards() {
-  $("#cards").innerHTML = SPOTS.map(s => {
+  $("#cards").innerHTML = tripSpots().map(s => {
     const d = me ? dist(me, s) : null;
     const dt = d == null ? "" : d < 1000 ? Math.round(d) + " m" : (d / 1000).toFixed(1) + " km";
     return `<div class="scard ${visited.has(s.id) ? "v" : ""} ${d != null && d < RADIUS ? "near" : ""}" data-id="${s.id}">
@@ -82,7 +116,7 @@ function setLang(l) {
   $("#j-title").textContent = t.passport; $("#d-title").textContent = t.diary;
   $("#diary-form .big").textContent = t.save;
   SPOTS.forEach(s => markers[s.id].bindTooltip(s.name[l]));
-  fillSpotSelect(); renderCards(); renderStamps(); refreshWelcome();
+  fillSpotSelect(); renderCards(); renderStamps(); refreshWelcome(); renderTrips(); $("#tripchip").textContent = trip().emoji + " " + trip().name[l];
   if (current) openSpot(current.id, false, true);
   renderEntries(); updateVoiceList();
 }
@@ -92,10 +126,12 @@ $("#lang-en").onclick = () => setLang("en");
 // ---------- Spot panel ----------
 function openSpot(id, autoSpeak, keepView) {
   current = spot(id);
-  const nx = spot(current.next);
+  const nx = nextOf(id);
   $("#p-name").textContent = `${idx(id)}. ${current.name[lang]}`;
   $("#p-story").textContent = current.story[lang];
-  $("#p-next").textContent = "➡ " + T[lang].next + nx.name[lang];
+  $("#p-next").classList.toggle("hidden", !nx); $("#p-walk").classList.toggle("hidden", !nx);
+  if (nx) $("#p-next").textContent = "➡ " + T[lang].next + nx.name[lang];
+  else toast(lang === "mr" ? "🎉 ही सफर पूर्ण झाली!" : "🎉 Trip complete!");
   $("#panel").classList.remove("hidden");
   $("#cards").classList.add("hidden"); $("#recenter").style.bottom = "50%";
   if (!keepView) map.flyTo([current.lat, current.lng], 17, { duration: 0.8 });
@@ -111,9 +147,9 @@ $("#p-play").onclick = () => current && speak(current.story[lang]);
 $("#p-stop").onclick = stopSpeak;
 $("#p-memory").onclick = () => { showTab("diary"); $("#d-spot").value = current.id; };
 $("#p-here").onclick = () => markVisited(current.id);
-$("#p-next").onclick = () => { const nx = spot(current.next); showRoute(spot(current.id), nx); openSpot(nx.id, false, true); };
+$("#p-next").onclick = () => { const nx = nextOf(current.id); if (!nx) return; showRoute(current, nx); openSpot(nx.id, false, true); };
 $("#p-walk").onclick = () => {
-  const nx = spot(current.next);
+  const nx = nextOf(current.id); if (!nx) return;
   const from = me ? `${me.lat},${me.lng}` : `${current.lat},${current.lng}`;
   window.open(`https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route=${from};${nx.lat},${nx.lng}`, "_blank");
 };
@@ -128,7 +164,7 @@ function showRoute(a, b) {
 function markVisited(id) {
   if (visited.has(id)) return toast(lang === "mr" ? "हा स्टॅम्प आधीच मिळाला आहे 💙" : "You already have this stamp 💙");
   visited.add(id); localStorage.visited = JSON.stringify([...visited]);
-  toast(T[lang].newStamp(spot(id).name[lang])); confetti(); refreshPins(); renderCards(); renderStamps();
+  toast(T[lang].newStamp(spot(id).name[lang])); confetti(); refreshPins(); renderCards(); renderStamps(); renderTrips();
 }
 function renderStamps() {
   $("#stamps").innerHTML = SPOTS.map(s => `<div class="stamp ${visited.has(s.id) ? "v" : ""}"><div class="e">${EMOJI[s.id]}</div><b>${s.name[lang]}</b></div>`).join("");
@@ -198,7 +234,7 @@ function onPos(p) {
   $("#recenter").classList.remove("hidden"); $("#status").classList.remove("hidden");
   if (firstFix) { firstFix = false; map.flyTo([me.lat, me.lng], me.acc > 500 ? 14 : 17); }
   let nearest = null, nd = Infinity;
-  SPOTS.forEach(s => { const d = dist(me, s); if (d < nd) { nd = d; nearest = s; } });
+  tripSpots().forEach(s => { const d = dist(me, s); if (d < nd) { nd = d; nearest = s; } });
   const dt = nd < 1000 ? Math.round(nd) + " m" : (nd / 1000).toFixed(1) + " km";
   const good = me.acc <= GOOD_ACC;
   $("#status").textContent = good
@@ -252,7 +288,7 @@ const store = mode => db.transaction("entries", mode).objectStore("entries");
 
 function fillSpotSelect() {
   const v = $("#d-spot").value;
-  $("#d-spot").innerHTML = SPOTS.map(s => `<option value="${s.id}">${idx(s.id)}. ${s.name[lang]}</option>`).join("");
+  $("#d-spot").innerHTML = SPOTS.map(s => `<option value="${s.id}">${s.name[lang]}</option>`).join("");
   if (v) $("#d-spot").value = v;
 }
 $("#d-photo").onchange = e => {
@@ -295,4 +331,5 @@ function showTab(t) {
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 
 setLang(lang);
+applyTrip(true);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");

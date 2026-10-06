@@ -126,3 +126,15 @@ label.chk{display:flex;gap:8px;align-items:center}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:5500;overflow:hidden}
 #confetti i{position:absolute;top:-20px;font-style:normal;animation:fall 2.4s ease-in forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.8}}
+
+/* trips */
+.trip{background:#fff;border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 6px 18px #0f6db533;border:2.5px solid transparent;transition:.25s}
+.trip.on{border-color:var(--sky);background:linear-gradient(180deg,#fff,var(--pale))}
+.trip .t-e{font-size:38px;float:left;margin-right:12px}
+.trip h3{margin:0 0 4px;color:var(--deep)}
+.trip p{margin:0 0 10px;line-height:1.5;font-size:14px;opacity:.85}
+.trip .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px;clear:both}
+.trip .chips span{background:var(--pale);color:var(--deep);border-radius:12px;padding:3px 9px;font-size:12px}
+.trip button{width:100%}
+nav button{font-size:11px}
+#tripchip{font-size:13px;padding:7px 13px}

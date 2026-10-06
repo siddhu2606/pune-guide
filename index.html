@@ -43,6 +43,7 @@
 
     <div id="bar">
       <button id="locate" class="pill">📍 Start walking tour</button>
+      <button id="tripchip" class="pill"></button>
       <button id="pick" class="pill">📌 Pick location</button>
       <span id="status" class="pill soft hidden"></span>
     </div>
@@ -69,6 +70,11 @@
         <button id="p-walk" class="ghost">🚶 Directions</button>
       </div>
     </div>
+  </section>
+
+  <section id="tab-trips" class="tab">
+    <h2 id="t-title">Choose your trip</h2>
+    <div id="trips"></div>
   </section>
 
   <section id="tab-journey" class="tab">
@@ -110,6 +116,7 @@
 
 <nav>
   <button data-tab="map" class="on"><span>🗺️</span>Map</button>
+  <button data-tab="trips"><span>🧭</span>Trips</button>
   <button data-tab="journey"><span>🏅</span>Passport</button>
   <button data-tab="diary"><span>📖</span>Diary</button>
   <button data-tab="voice"><span>🎙️</span>Voice</button>
@@ -120,6 +127,7 @@
 
 <script src="lib/leaflet.js"></script>
 <script src="spots.js"></script>
+<script src="trips.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

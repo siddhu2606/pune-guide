@@ -44,7 +44,7 @@
     <div id="bar">
       <button id="locate" class="pill">📍 Start walking tour</button>
       <button id="tripchip" class="pill"></button>
-      <button id="pick" class="pill">📌 Pick location</button>
+      <button id="pick" class="pill">📍 Location</button>
       <span id="status" class="pill soft hidden"></span>
     </div>
     <button id="recenter" class="fab hidden" title="Centre on me">🎯</button>
@@ -157,6 +157,25 @@
   </div>
 </div>
 
+<div id="locsheet" class="hidden">
+  <div class="ls-card">
+    <div class="grab"></div>
+    <div class="p-head"><h2 id="ls-title">Set my location</h2><button id="ls-close" class="x">✕</button></div>
+    <p id="ls-state" class="hint"></p>
+    <button id="ls-gps" class="big">🎯 Use my GPS (precise)</button>
+    <button id="ls-map" class="ghost">🗺️ Tap on the map</button>
+    <div class="ls-row">
+      <select id="ls-spot"></select>
+      <button id="ls-spotgo" class="ghost">I'm here</button>
+    </div>
+    <div class="ls-row">
+      <input id="ls-q" type="search" placeholder="Search a place in Pune…">
+      <button id="ls-search" class="ghost">Search</button>
+    </div>
+    <div id="ls-results"></div>
+    <p class="hint" id="ls-tip">Tip: for GPS, turn on Location, allow <b>Precise</b> when asked, and stand outside for a few seconds.</p>
+  </div>
+</div>
 <div id="toast" class="hidden"></div>
 <div id="confetti"></div>
 

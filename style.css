@@ -166,3 +166,10 @@ nav button{font-size:11px}
 #ed-tools{display:flex;background:#fff;border-top:1px solid #0001;padding-bottom:env(safe-area-inset-bottom)}
 #ed-tools button{flex:1;background:none;color:#6b8aa3;border-radius:0;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px}
 #ed-tools button span{font-size:20px}#ed-tools button.on{color:var(--deep);font-weight:700;border-top:3px solid var(--sky)}
+
+/* location sheet */
+#locsheet{position:fixed;inset:0;z-index:6500;background:#0b223399;display:flex;align-items:flex-end}
+.ls-card{background:#fff;width:100%;border-radius:26px 26px 0 0;padding:8px 18px calc(18px + env(safe-area-inset-bottom));max-height:85%;overflow:auto;display:flex;flex-direction:column;gap:10px;animation:slide .3s}
+.ls-card h2{margin:0}
+.ls-row{display:flex;gap:8px}.ls-row select,.ls-row input{flex:1;min-width:0;padding:11px;border:1.5px solid var(--sky2);border-radius:14px;font:inherit;background:#fff}
+#ls-results button{display:block;width:100%;text-align:left;background:var(--pale);color:var(--ink);margin-top:6px;font-size:14px}

@@ -112,7 +112,7 @@ function setLang(l) {
   const t = T[l];
   $("#h-title").textContent = t.title;
   $("#p-play").textContent = t.listen; $("#p-here").textContent = t.here; $("#p-walk").textContent = t.dir; $("#p-memory").textContent = t.mem;
-  $("#locate").textContent = watchId !== null ? t.stop : t.start; $("#pick").textContent = l === "mr" ? "📌 ठिकाण निवडा" : "📌 Pick location";
+  $("#locate").textContent = watchId !== null ? t.stop : t.start; $("#pick").textContent = l === "mr" ? "📍 माझे ठिकाण" : "📍 Location";
   $("#j-title").textContent = t.passport; $("#d-title").textContent = t.diary;
   $("#diary-form .big").textContent = t.save;
   SPOTS.forEach(s => markers[s.id].bindTooltip(s.name[l]));
@@ -201,7 +201,7 @@ $("#locate").onclick = () => {
   if (watchId !== null) {
     navigator.geolocation.clearWatch(watchId); watchId = null;
     $("#locate").classList.remove("on"); $("#locate").textContent = T[lang].start;
-    $("#status").classList.add("hidden"); $("#recenter").classList.add("hidden"); meMarker.remove(); if (accCircle) { accCircle.remove(); accCircle = null; } firstFix = true; me = null; renderCards(); return;
+    $("#status").classList.add("hidden"); $("#recenter").classList.add("hidden"); meMarker.remove(); if (accCircle) { accCircle.remove(); accCircle = null; } firstFix = true; goodFix = false; me = null; renderCards(); return;
   }
   if (!navigator.geolocation) return geoError({ message: "This browser has no GPS support." });
   if (!secure) return geoError({ message: "Needs https — see the yellow note above." });
@@ -212,19 +212,61 @@ $("#locate").onclick = () => {
   watchId = navigator.geolocation.watchPosition(onPos, geoError, { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
 };
 $("#recenter").onclick = () => me && map.flyTo([me.lat, me.lng], 17);
-let firstFix = true, accCircle = null, manual = false;
+let firstFix = true, accCircle = null, manual = false, goodFix = false;
 // Manual mode: she (or you) taps the map to say "I am here"; the marker can then be dragged.
+function setManualLocation(lat, lng, zoomTo = true) {
+  if (watchId !== null) $("#locate").click(); // stop GPS
+  manual = true; firstFix = false;
+  meMarker.options.draggable = true; meMarker.dragging && meMarker.dragging.enable();
+  onPos({ coords: { latitude: lat, longitude: lng, accuracy: 10 } });
+  if (zoomTo) map.flyTo([lat, lng], 17);
+}
 function pickLocation() {
   toast(lang === "mr" ? "नकाशावर तुमचे ठिकाण निवडा 👆" : "Tap the map where you are 👆");
-  map.once("click", e => {
-    if (watchId !== null) $("#locate").click(); // stop GPS
-    manual = true; firstFix = false;
-    meMarker.options.draggable = true; meMarker.dragging && meMarker.dragging.enable();
-    onPos({ coords: { latitude: e.latlng.lat, longitude: e.latlng.lng, accuracy: 10 } });
-  });
+  map.once("click", e => setManualLocation(e.latlng.lat, e.latlng.lng, false));
 }
 meMarker.on("dragend", () => { const p = meMarker.getLatLng(); onPos({ coords: { latitude: p.lat, longitude: p.lng, accuracy: 10 } }); });
-$("#pick").onclick = pickLocation;
+// ----- Location sheet: GPS / tap map / "I'm at a spot" / search a place -----
+function locState() {
+  const t = !me ? (lang === "mr" ? "अजून ठिकाण सेट नाही." : "Location not set yet.")
+    : manual ? `📌 Manual location (${me.lat.toFixed(4)}, ${me.lng.toFixed(4)})`
+    : `🎯 GPS · accuracy ±${me.acc >= 1000 ? (me.acc / 1000).toFixed(1) + " km" : Math.round(me.acc) + " m"}${me.acc > GOOD_ACC ? " (weak)" : ""}`;
+  $("#ls-state").textContent = t;
+}
+function openLocSheet() {
+  $("#ls-spot").innerHTML = SPOTS.map(s => `<option value="${s.id}">${s.name[lang]}</option>`).join("");
+  $("#ls-results").innerHTML = ""; locState(); $("#locsheet").classList.remove("hidden");
+}
+const closeLocSheet = () => $("#locsheet").classList.add("hidden");
+$("#pick").onclick = openLocSheet;
+$("#ls-close").onclick = closeLocSheet;
+$("#locsheet").onclick = e => { if (e.target.id === "locsheet") closeLocSheet(); };
+$("#ls-gps").onclick = () => {
+  closeLocSheet(); manual = false; meMarker.dragging && meMarker.dragging.disable();
+  if (!secure) return geoError({ message: "Needs https." });
+  goodFix = false; firstFix = true;
+  const s = $("#status"); s.textContent = T[lang].finding; s.classList.remove("hidden");
+  if (watchId === null) $("#locate").click();
+  else navigator.geolocation.getCurrentPosition(onPos, geoError, { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+};
+$("#ls-map").onclick = () => { closeLocSheet(); pickLocation(); };
+$("#ls-spotgo").onclick = () => { const s = spot($("#ls-spot").value); closeLocSheet(); setManualLocation(s.lat, s.lng); };
+async function searchPlace() {
+  const q = $("#ls-q").value.trim(); if (!q) return;
+  const box = $("#ls-results"); box.textContent = "…";
+  try {
+    const r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=6&countrycodes=in&viewbox=73.6,18.75,74.1,18.3&q=" + encodeURIComponent(q + " Pune"));
+    const list = await r.json(); box.innerHTML = "";
+    if (!list.length) box.textContent = lang === "mr" ? "काही सापडले नाही." : "Nothing found.";
+    list.forEach(p => {
+      const b = document.createElement("button"); b.textContent = "📍 " + p.display_name.split(",").slice(0, 3).join(",");
+      b.onclick = () => { closeLocSheet(); setManualLocation(+p.lat, +p.lon); }; box.appendChild(b);
+    });
+  } catch (e) { box.textContent = "Search failed - check internet."; }
+}
+$("#ls-search").onclick = searchPlace;
+$("#ls-q").onkeydown = e => { if (e.key === "Enter") searchPlace(); };
+
 const GOOD_ACC = 100; // metres: only trust fixes at least this accurate for auto-triggering
 function onPos(p) {
   me = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
@@ -237,7 +279,8 @@ function onPos(p) {
   tripSpots().forEach(s => { const d = dist(me, s); if (d < nd) { nd = d; nearest = s; } });
   const dt = nd < 1000 ? Math.round(nd) + " m" : (nd / 1000).toFixed(1) + " km";
   const good = me.acc <= GOOD_ACC;
-  $("#status").textContent = good
+  if (good && !goodFix && !manual) { goodFix = true; map.flyTo([me.lat, me.lng], 17); }
+  $("#status").textContent = manual ? `📌 ${nearest.name[lang]} · ${dt}` : good
     ? `📍 ${nearest.name[lang]} · ${dt} · ±${Math.round(me.acc)} m`
     : `⚠️ Weak location (±${me.acc >= 1000 ? (me.acc / 1000).toFixed(1) + " km" : Math.round(me.acc) + " m"}) — turn on GPS / Precise location, go outside`;
   $("#status").innerHTML += `<br><small>${me.lat.toFixed(5)}, ${me.lng.toFixed(5)} · v3 · <a href="https://www.google.com/maps?q=${me.lat},${me.lng}" target="_blank">check on Google Maps</a></small>`;

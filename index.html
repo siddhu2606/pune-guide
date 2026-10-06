@@ -90,9 +90,11 @@
     <h2 id="d-title">Memory Diary</h2>
     <form id="diary-form">
       <select id="d-spot"></select>
-      <label class="photo">📷 Take / choose photo
-        <input type="file" id="d-photo" accept="image/*">
-      </label>
+      <div class="photo-btns">
+        <button type="button" id="d-cam" class="big">📸 Camera</button>
+        <button type="button" id="d-gal" class="ghost">🖼️ Gallery</button>
+      </div>
+      <input type="file" id="d-photo" accept="image/*" hidden>
       <img id="d-preview" class="hidden" alt="">
       <textarea id="d-note" rows="3" placeholder="आजची आठवण... / Write a memory..."></textarea>
       <button type="submit" class="big">Save memory 💙</button>
@@ -122,6 +124,39 @@
   <button data-tab="voice"><span>🎙️</span>Voice</button>
 </nav>
 
+
+<!-- Photo studio -->
+<div id="studio" class="hidden">
+  <div id="cam-view" class="hidden">
+    <video id="cam" autoplay playsinline muted></video>
+    <p id="cam-err" class="hidden"></p>
+    <div class="cam-bar">
+      <button id="cam-gallery" class="round" title="Gallery">🖼️</button>
+      <button id="cam-snap" class="shutter" title="Take photo"></button>
+      <button id="cam-flip" class="round" title="Flip camera">🔄</button>
+    </div>
+    <button id="cam-close" class="x top">✕</button>
+  </div>
+  <div id="ed-view" class="hidden">
+    <div class="ed-top">
+      <button id="ed-cancel" class="ghost">✕</button>
+      <button id="ed-retake" class="ghost">📸 Retake</button>
+      <button id="ed-undo" class="ghost">↶ Undo</button>
+      <button id="ed-done" class="big">Done ✓</button>
+    </div>
+    <div class="ed-stage"><canvas id="ed"></canvas></div>
+    <label class="chk stamp"><input type="checkbox" id="ed-stamp"> 📍 Add place &amp; date label</label>
+    <div id="ed-opts"></div>
+    <div id="ed-tools">
+      <button data-tool="move"><span>✋</span>Move</button>
+      <button data-tool="draw"><span>✏️</span>Draw</button>
+      <button data-tool="text"><span>🔤</span>Text</button>
+      <button data-tool="sticker"><span>😀</span>Stickers</button>
+      <button data-tool="filter"><span>🎨</span>Filters</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="hidden"></div>
 <div id="confetti"></div>
 
@@ -129,5 +164,6 @@
 <script src="spots.js"></script>
 <script src="trips.js"></script>
 <script src="app.js"></script>
+<script src="studio.js"></script>
 </body>
 </html>

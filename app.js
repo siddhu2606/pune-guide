@@ -291,16 +291,13 @@ function fillSpotSelect() {
   $("#d-spot").innerHTML = SPOTS.map(s => `<option value="${s.id}">${s.name[lang]}</option>`).join("");
   if (v) $("#d-spot").value = v;
 }
-$("#d-photo").onchange = e => {
-  const f = e.target.files[0];
-  if (f) { $("#d-preview").src = URL.createObjectURL(f); $("#d-preview").classList.remove("hidden"); }
-};
+let diaryPhoto = null; // set by the photo studio (studio.js)
 $("#diary-form").onsubmit = e => {
   e.preventDefault();
-  const file = $("#d-photo").files[0], note = $("#d-note").value.trim();
+  const file = diaryPhoto, note = $("#d-note").value.trim();
   if (!file && !note) return;
   store("readwrite").add({ spot: $("#d-spot").value, note, photo: file || null, date: Date.now() }).onsuccess = () => {
-    e.target.reset(); $("#d-preview").classList.add("hidden"); renderEntries(); toast("💙 Saved"); confetti();
+    e.target.reset(); diaryPhoto = null; $("#d-preview").classList.add("hidden"); renderEntries(); toast("💙 Saved"); confetti();
   };
 };
 function renderEntries() {
